@@ -669,8 +669,7 @@ class BuddyAI {
     async sendMessage() {
         // Check if API key is set
         if (!this.API_KEY) {
-            this.showNotification('Please add your OpenRouter API key in settings first', 'error');
-            this.toggleRightSidebar(); // Open settings panel
+            this.showNotification('API key not configured. Please check config.json', 'error');
             return;
         }
         
@@ -727,7 +726,7 @@ class BuddyAI {
             
             let errorMessage = 'Sorry, I encountered an error. ';
             if (error.message.includes('API key') || error.message.includes('401') || error.message.includes('403')) {
-                errorMessage += 'Please check your OpenRouter API key in settings.';
+                errorMessage += 'Please check your API key in config.json.';
                 this.toggleRightSidebar(); // Open settings panel
             } else if (error.message.includes('model')) {
                 errorMessage += 'The selected model might be unavailable. Try another model.';
