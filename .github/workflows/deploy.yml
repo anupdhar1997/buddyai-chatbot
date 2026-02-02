@@ -26,11 +26,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Inject API Key
+        env:
+          API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          echo '{
-            "apiKey": "${{ secrets.OPENROUTER_API_KEY }}",
-            "customModels": []
-          }' > config.json
+          cat > config.json << EOF
+          {
+              "apiKey": "${API_KEY}",
+              "customModels": []
+          }
+          EOF
+          echo "Config.json created with API key (first 10 chars): ${API_KEY:0:10}***"
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
