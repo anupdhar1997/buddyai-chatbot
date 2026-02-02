@@ -29,13 +29,16 @@ jobs:
         env:
           API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          cat > config.json << EOF
-          {
-              "apiKey": "${API_KEY}",
-              "customModels": []
-          }
-          EOF
-          echo "Config.json created with API key (first 10 chars): ${API_KEY:0:10}***"
+          printf '{"apiKey":"%s","customModels":[]}' "$API_KEY" > config.json
+          echo "=== Config.json contents ==="
+          cat config.json
+          echo ""
+          echo "=== API Key check ==="
+          if [ -z "$API_KEY" ]; then
+            echo "WARNING: API_KEY is empty! Check your GitHub Secret."
+          else
+            echo "API key found (first 10 chars): ${API_KEY:0:10}***"
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
