@@ -115,7 +115,10 @@ class BuddyAI {
             
             if (response.ok) {
                 const config = await response.json();
-                console.log('Config loaded, API key present:', !!config.apiKey);
+                console.log('Full config:', JSON.stringify(config));
+                console.log('Config loaded, API key value:', config.apiKey);
+                console.log('API key type:', typeof config.apiKey);
+                console.log('API key length:', config.apiKey ? config.apiKey.length : 0);
                 
                 if (config.apiKey && config.apiKey.trim() !== '') {
                     this.API_KEY = config.apiKey;
