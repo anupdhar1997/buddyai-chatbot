@@ -1161,6 +1161,116 @@
             display: block;
         }
 
+        /* ========== COMPREHENSIVE MOBILE FIXES ========== */
+        @media (max-width: 768px) {
+            /* Fix viewport height for mobile browsers */
+            body {
+                height: 100dvh; /* Dynamic viewport height */
+                height: -webkit-fill-available;
+            }
+            
+            .app-container {
+                height: 100dvh;
+                height: -webkit-fill-available;
+                flex-direction: column;
+            }
+            
+            /* Main content takes remaining space */
+            .main-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                height: 100%;
+            }
+            
+            /* Top bar compact on mobile */
+            .top-bar {
+                height: 52px;
+                min-height: 52px;
+                flex-shrink: 0;
+            }
+            
+            /* Chat container fills available space */
+            .chat-container {
+                flex: 1;
+                min-height: 0;
+                overflow: hidden;
+            }
+            
+            /* Chat messages scroll area */
+            .chat-messages {
+                flex: 1;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 12px;
+                padding-bottom: 16px;
+            }
+            
+            /* Messages take full width on mobile */
+            .message {
+                gap: 10px;
+                max-width: 100%;
+            }
+            
+            .avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .bubble {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            
+            /* Input area fixed at bottom */
+            .input-area {
+                flex-shrink: 0;
+                padding: 10px 12px;
+                padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+                background: var(--bg);
+                border-top: 1px solid var(--border);
+            }
+            
+            /* Smaller input field on mobile */
+            #messageInput {
+                min-height: 44px;
+                padding: 10px 48px 10px 14px;
+                font-size: 16px; /* Prevents iOS zoom */
+                border-radius: var(--radius);
+            }
+            
+            /* Smaller send button */
+            #sendButton {
+                width: 34px;
+                height: 34px;
+                right: 8px;
+            }
+            
+            /* Hide model name on mobile */
+            .current-model {
+                display: none !important;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 380px) {
+            .top-bar {
+                height: 48px;
+                min-height: 48px;
+            }
+            
+            .chat-messages {
+                padding: 10px 8px;
+            }
+            
+            .bubble {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
+
     </style>
 </head>
 <body>
