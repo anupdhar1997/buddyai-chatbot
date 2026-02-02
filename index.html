@@ -1164,24 +1164,26 @@
         /* ========== COMPREHENSIVE MOBILE FIXES ========== */
         @media (max-width: 768px) {
             /* Fix viewport height for mobile browsers */
-            body {
-                height: 100dvh; /* Dynamic viewport height */
-                height: -webkit-fill-available;
+            html, body {
+                height: 100%;
+                overflow: hidden;
             }
             
             .app-container {
+                height: 100vh;
                 height: 100dvh;
-                height: -webkit-fill-available;
+                display: flex;
                 flex-direction: column;
+                overflow: hidden;
             }
             
-            /* Main content takes remaining space */
+            /* Main content fills available space */
             .main-content {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
-                min-height: 0;
-                height: 100%;
+                overflow: hidden;
+                position: relative;
             }
             
             /* Top bar compact on mobile */
@@ -1191,10 +1193,11 @@
                 flex-shrink: 0;
             }
             
-            /* Chat container fills available space */
+            /* Chat container fills space between top bar and input */
             .chat-container {
                 flex: 1;
-                min-height: 0;
+                display: flex;
+                flex-direction: column;
                 overflow: hidden;
             }
             
@@ -1202,9 +1205,9 @@
             .chat-messages {
                 flex: 1;
                 overflow-y: auto;
+                overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
                 padding: 12px;
-                padding-bottom: 16px;
             }
             
             /* Messages take full width on mobile */
@@ -1228,9 +1231,11 @@
             .input-area {
                 flex-shrink: 0;
                 padding: 10px 12px;
-                padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
                 background: var(--bg);
                 border-top: 1px solid var(--border);
+                position: relative;
+                z-index: 100;
             }
             
             /* Smaller input field on mobile */
