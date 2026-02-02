@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>BuddyAI - AI Coding Assistant</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
@@ -626,11 +626,17 @@
             padding: 20px 24px 28px;
             border-top: 1px solid var(--border);
             background: linear-gradient(180deg, var(--bg) 0%, var(--bg-light) 100%);
+            /* iOS safe area support */
+            padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
         }
 
         @media (max-width: 768px) {
             .input-area {
-                padding: 16px 16px 24px;
+                padding: 12px 12px;
+                padding-bottom: calc(16px + env(safe-area-inset-bottom, 20px));
+                position: sticky;
+                bottom: 0;
+                z-index: 100;
             }
         }
 
