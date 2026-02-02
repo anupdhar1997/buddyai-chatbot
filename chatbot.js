@@ -84,9 +84,9 @@ class BuddyAI {
         this.init();
     }
 
-    init() {
+    async init() {
         this.loadState();
-        this.loadConfig(); // Load from server
+        await this.loadConfig(); // Wait for config to load
         this.setupEventListeners();
         this.renderModelDropdown();
         this.renderSavedModels();
@@ -106,26 +106,32 @@ class BuddyAI {
     // New method to load config from server/static file
     async loadConfig() {
         try {
-            // Updated to fetch directly from file for GitHub Pages compatibility
+            console.log('Loading config.json...');
             const response = await fetch('./config.json');
+            console.log('Config fetch response:', response.status);
+            
             if (response.ok) {
                 const config = await response.json();
-                if (config.apiKey) {
+                console.log('Config loaded, API key present:', !!config.apiKey);
+                
+                if (config.apiKey && config.apiKey.trim() !== '') {
                     this.API_KEY = config.apiKey;
-                    this.checkApiKeyStatus();
+                    console.log('API key set successfully');
+                } else {
+                    console.warn('API key is empty in config.json');
                 }
+                
                 if (config.customModels && Array.isArray(config.customModels)) {
-                    // Merge with existing unique models
                     const newModels = config.customModels.filter(m => !this.state.customModels.includes(m));
                     this.state.customModels = [...this.state.customModels, ...newModels];
                     this.renderModelDropdown();
                     this.renderSavedModels();
                 }
+            } else {
+                console.error('Failed to load config.json:', response.status, response.statusText);
             }
         } catch (error) {
-            console.warn('Could not load config.json:', error);
-            // Fallback to local storage
-            this.loadApiKey(); 
+            console.error('Error loading config.json:', error);
         }
     }
 
