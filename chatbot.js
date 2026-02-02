@@ -107,7 +107,10 @@ class BuddyAI {
     async loadConfig() {
         try {
             console.log('Loading config.json...');
-            const response = await fetch('./config.json');
+            // Add cache-busting to avoid stale cached config
+            const response = await fetch('./config.json?t=' + Date.now(), {
+                cache: 'no-store'
+            });
             console.log('Config fetch response:', response.status);
             
             if (response.ok) {
