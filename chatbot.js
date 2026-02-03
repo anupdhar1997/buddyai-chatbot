@@ -46,39 +46,32 @@ class BuddyAI {
             webSearchEnabled: true, // Enable web search by default
             presetModels: [
                 {
-                    id: 'openai/gpt-3.5-turbo',
-                    name: 'GPT-3.5 Turbo',
-                    description: 'Fast & cost-effective',
-                    icon: 'fa-bolt',
-                    badge: 'Popular'
+                    "id": "openai/gpt-3.5-turbo",
+                    "name": "GPT-3.5 Turbo",
+                    "description": "Fast & cost-effective",
+                    "icon": "fa-bolt",
+                    "badge": "Popular"
                 },
                 {
-                    id: 'openai/gpt-4',
-                    name: 'GPT-4',
-                    description: 'Most capable',
-                    icon: 'fa-crown',
-                    badge: 'Premium'
+                    "id": "anthropic/claude-3-haiku",
+                    "name": "Claude 3 Haiku",
+                    "description": "Fast & efficient",
+                    "icon": "fa-leaf",
+                    "badge": "New"
                 },
                 {
-                    id: 'anthropic/claude-3-haiku',
-                    name: 'Claude 3 Haiku',
-                    description: 'Fast & efficient',
-                    icon: 'fa-leaf',
-                    badge: 'New'
+                    "id": "meta-llama/llama-3.1-70b-instruct",
+                    "name": "Llama 3.1 70B",
+                    "description": "Open-source power",
+                    "icon": "fa-dragon",
+                    "badge": "Open"
                 },
                 {
-                    id: 'google/gemini-pro',
-                    name: 'Gemini Pro',
-                    description: 'Great for reasoning',
-                    icon: 'fa-gem',
-                    badge: 'Google'
-                },
-                {
-                    id: 'meta-llama/llama-3.1-70b-instruct',
-                    name: 'Llama 3.1 70B',
-                    description: 'Open-source power',
-                    icon: 'fa-dragon',
-                    badge: 'Open'
+                    "id": "deepseek/deepseek-r1-0528:free",
+                    "name": "DeepSeek R1",
+                    "description": "Free reasoning model",
+                    "icon": "fa-brain",
+                    "badge": "Free"
                 }
             ]
         };
