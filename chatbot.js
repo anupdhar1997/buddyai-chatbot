@@ -20,6 +20,7 @@ class BuddyAI {
         this.newChatBtn = document.getElementById('newChatBtn');
         this.exportChatBtn = document.getElementById('exportChatBtn');
         this.themeToggleBtn = document.getElementById('themeToggleBtn');
+        this.webSearchToggle = document.getElementById('webSearchToggle');
         this.historyList = document.getElementById('historyList');
         this.currentModelName = document.getElementById('currentModelName');
         
@@ -42,6 +43,7 @@ class BuddyAI {
             modelSwitchCount: 0,
             customModels: [],
             chatHistory: [],
+            webSearchEnabled: true, // Enable web search by default
             presetModels: [
                 {
                     id: 'openai/gpt-3.5-turbo',
@@ -115,11 +117,9 @@ class BuddyAI {
             
             if (response.ok) {
                 const config = await response.json();
-                console.log('Full config:', JSON.stringify(config));
-                console.log('Config loaded, API key value:', config.apiKey);
-                console.log('API key type:', typeof config.apiKey);
-                console.log('API key length:', config.apiKey ? config.apiKey.length : 0);
+                console.log('Config loaded successfully');
                 
+                // Load API key
                 if (config.apiKey && config.apiKey.trim() !== '') {
                     this.API_KEY = config.apiKey;
                     console.log('API key set successfully');
@@ -127,6 +127,14 @@ class BuddyAI {
                     console.warn('API key is empty in config.json');
                 }
                 
+                // Load preset models from config
+                if (config.presetModels && Array.isArray(config.presetModels) && config.presetModels.length > 0) {
+                    this.state.presetModels = config.presetModels;
+                    console.log('Loaded', config.presetModels.length, 'preset models from config');
+                    this.renderModelDropdown();
+                }
+                
+                // Load custom models
                 if (config.customModels && Array.isArray(config.customModels)) {
                     const newModels = config.customModels.filter(m => !this.state.customModels.includes(m));
                     this.state.customModels = [...this.state.customModels, ...newModels];
@@ -193,6 +201,11 @@ class BuddyAI {
         this.exportChatBtn.addEventListener('click', () => this.exportCurrentChat());
         this.clearHistoryBtn.addEventListener('click', () => this.clearAllHistory());
         this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+        
+        // Web search toggle
+        if (this.webSearchToggle) {
+            this.webSearchToggle.addEventListener('click', () => this.toggleWebSearch());
+        }
         
         // Close sidebar with Escape key
         document.addEventListener('keydown', (e) => {
@@ -262,6 +275,20 @@ class BuddyAI {
         if (window.innerWidth > 1200) {
             this.sidebarOverlay.classList.remove('active');
         }
+    }
+
+    toggleWebSearch() {
+        this.state.webSearchEnabled = !this.state.webSearchEnabled;
+        
+        if (this.webSearchToggle) {
+            this.webSearchToggle.classList.toggle('active', this.state.webSearchEnabled);
+        }
+        
+        const status = this.state.webSearchEnabled ? 'enabled' : 'disabled';
+        this.showNotification(`Web search ${status}`, 'info');
+        
+        // Save state
+        this.saveState();
     }
 
     setupAutoResize() {
@@ -678,6 +705,212 @@ class BuddyAI {
         }
     }
 
+    // Web search using DuckDuckGo HTML search (better results than API)
+    async searchWeb(query) {
+        try {
+            console.log('Searching web for:', query);
+            
+            // Use DuckDuckGo HTML search for better results
+            const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(searchUrl)}`;
+            
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            
+            if (data.contents) {
+                // Parse HTML to extract search results
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data.contents, 'text/html');
+                
+                let searchResults = [];
+                
+                // Find all result elements
+                const results = doc.querySelectorAll('.result');
+                
+                for (let i = 0; i < Math.min(5, results.length); i++) {
+                    const result = results[i];
+                    
+                    // Get title and URL
+                    const titleEl = result.querySelector('.result__a');
+                    const snippetEl = result.querySelector('.result__snippet');
+                    
+                    if (titleEl) {
+                        const title = titleEl.textContent.trim();
+                        let url = titleEl.getAttribute('href') || '';
+                        
+                        // DuckDuckGo uses redirect URLs, extract the actual URL
+                        if (url.includes('uddg=')) {
+                            try {
+                                const urlMatch = url.match(/uddg=([^&]+)/);
+                                if (urlMatch) {
+                                    url = decodeURIComponent(urlMatch[1]);
+                                }
+                            } catch (e) {
+                                // Keep original URL if decode fails
+                            }
+                        }
+                        
+                        const snippet = snippetEl ? snippetEl.textContent.trim() : '';
+                        
+                        if (title && (snippet || url)) {
+                            searchResults.push({
+                                title: title,
+                                snippet: snippet,
+                                url: url
+                            });
+                        }
+                    }
+                }
+                
+                console.log('Search results found:', searchResults.length);
+                return searchResults;
+            }
+            return [];
+        } catch (error) {
+            console.error('Error searching web:', error);
+            // Fallback: try the instant answer API
+            return await this.searchWebFallback(query);
+        }
+    }
+
+    // Fallback search using DuckDuckGo Instant Answer API
+    async searchWebFallback(query) {
+        try {
+            const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(searchUrl)}`;
+            
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            
+            if (data.contents) {
+                const results = JSON.parse(data.contents);
+                let searchResults = [];
+                
+                if (results.Abstract) {
+                    searchResults.push({
+                        title: results.Heading || 'Summary',
+                        snippet: results.Abstract,
+                        url: results.AbstractURL || ''
+                    });
+                }
+                
+                if (results.RelatedTopics) {
+                    for (let i = 0; i < Math.min(3, results.RelatedTopics.length); i++) {
+                        const topic = results.RelatedTopics[i];
+                        if (topic.Text) {
+                            searchResults.push({
+                                title: topic.Text.split(' - ')[0] || 'Related',
+                                snippet: topic.Text,
+                                url: topic.FirstURL || ''
+                            });
+                        }
+                    }
+                }
+                
+                return searchResults;
+            }
+            return [];
+        } catch (error) {
+            console.error('Fallback search also failed:', error);
+            return [];
+        }
+    }
+
+    // Fetch content from search results
+    async getWebSearchContext(query) {
+        const searchResults = await this.searchWeb(query);
+        
+        if (searchResults.length === 0) {
+            return null;
+        }
+        
+        let context = `[WEB SEARCH RESULTS FOR: "${query}"]\n\n`;
+        let sources = [];
+        
+        // Format each result with numbered source
+        for (let i = 0; i < searchResults.length; i++) {
+            const result = searchResults[i];
+            const sourceNum = i + 1;
+            
+            context += `--- RESULT ${sourceNum} ---\n`;
+            context += `Title: ${result.title}\n`;
+            context += `Summary: ${result.snippet}\n`;
+            if (result.url) {
+                context += `URL: ${result.url}\n`;
+                sources.push({ num: sourceNum, title: result.title, url: result.url });
+            }
+            context += '\n';
+        }
+        
+        // Try to fetch content from the first URL with content
+        const urlsToFetch = searchResults.filter(r => r.url).slice(0, 2);
+        
+        for (const result of urlsToFetch) {
+            const content = await this.fetchUrlContent(result.url);
+            if (content && content.length > 100) {
+                context += `\n--- DETAILED CONTENT FROM: ${result.url} ---\n`;
+                context += `${content.substring(0, 5000)}\n`;
+                context += `--- END OF DETAILED CONTENT ---\n`;
+                break; // Only fetch one detailed page
+            }
+        }
+        
+        // Add sources summary at the end
+        if (sources.length > 0) {
+            context += '\n--- SOURCES (cite these in your response) ---\n';
+            for (const src of sources) {
+                context += `[${src.num}] ${src.title}: ${src.url}\n`;
+            }
+        }
+        
+        context += '\n[INSTRUCTION: Use the above search results to answer the user. ALWAYS include the actual source URLs in your response so user can verify.]';
+        
+        return context;
+    }
+
+    // Detect if message should trigger web search
+    shouldSearchWeb(message) {
+        const lowerMessage = message.toLowerCase();
+        
+        // Keywords that suggest needing current web info
+        const searchTriggers = [
+            // Questions about products/services
+            'price', 'pricing', 'cost', 'plans', 'plan', 'subscription',
+            'buy', 'purchase', 'deal', 'discount', 'offer',
+            // Info queries
+            'what is', 'what are', 'who is', 'where is', 'when is',
+            'how to', 'how do', 'how can', 'how much',
+            'latest', 'new', 'current', 'today', 'recent', '2024', '2025',
+            // Specific actions
+            'find', 'search', 'look up', 'lookup', 'get info',
+            'compare', 'review', 'reviews', 'best',
+            // Government and services
+            'portal', 'government', 'gov', 'service', 'services', 'fee', 'fees',
+            'registration', 'apply', 'application', 'document', 'documents',
+            'sewa', 'setu', 'official', 'website',
+            // Company/product names often need search
+            'hostinger', 'godaddy', 'bluehost', 'amazon', 'netflix',
+            'google', 'microsoft', 'apple', 'facebook', 'meta',
+            'openai', 'anthropic', 'feature', 'specification',
+            // Additional triggers
+            'news', 'update', 'updates', 'information', 'details', 'about'
+        ];
+        
+        // Check if message contains any trigger words
+        for (const trigger of searchTriggers) {
+            if (lowerMessage.includes(trigger)) {
+                return true;
+            }
+        }
+        
+        // Also trigger for questions (ending with ?)
+        if (message.trim().endsWith('?') && message.length > 15) {
+            return true;
+        }
+        
+        return false;
+    }
+
     async sendMessage() {
         // Check if API key is set
         if (!this.API_KEY) {
@@ -716,6 +949,18 @@ class BuddyAI {
                 this.showNotification('URL content loaded successfully', 'success');
             } else {
                  this.showNotification('Could not fetch URL content. Proceeding with message only.', 'warning');
+            }
+        } else if (this.state.webSearchEnabled && this.shouldSearchWeb(message)) {
+            // Auto web search for queries that look like they need current info
+            this.showNotification('Searching the web...', 'info');
+            this.showTypingIndicator();
+            
+            const searchContext = await this.getWebSearchContext(message);
+            this.hideTypingIndicator();
+            
+            if (searchContext) {
+                contextMessage = `${message}\n\n[System: Web search results to help answer the user's question]\n---\n${searchContext}\n---\n[System: End of search results. Use this information to provide an accurate, up-to-date response.]`;
+                this.showNotification('Web search completed', 'success');
             }
         }
         
@@ -777,9 +1022,22 @@ class BuddyAI {
                 messages: [
                     {
                         role: "system",
-                        content: `You are BuddyAI, an expert AI coding assistant. You help with programming, debugging, code review, and learning. 
-                        Always format code properly with language specification. Be concise but thorough.
-                        Current model: ${this.state.currentModel}`
+                        content: `You are BuddyAI, an expert AI assistant with web search capabilities. 
+
+KEY CAPABILITIES:
+- You CAN access real-time web content and search results
+- When web search results are provided in the user message (marked with [Web Search Results] or [System:]), USE that information to answer
+- Do NOT say you cannot browse the internet - the system fetches web content for you
+- Always cite sources when using web search results
+
+GUIDELINES:
+- For coding questions: provide well-formatted code with language specification
+- For web searches: summarize the information found and provide relevant details
+- Be concise but thorough
+- If search results are empty or unclear, acknowledge limitations honestly
+
+Current model: ${this.state.currentModel}
+Web search: ${this.state.webSearchEnabled ? 'enabled' : 'disabled'}`
                     },
                     ...history
                 ],
