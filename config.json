@@ -1,4 +1,35 @@
 {
     "apiKey": "",
-    "customModels": []
+    "customModels": [],
+    "presetModels": [
+        {
+            "id": "openai/gpt-3.5-turbo",
+            "name": "GPT-3.5 Turbo",
+            "description": "Fast & cost-effective",
+            "icon": "fa-bolt",
+            "badge": "Popular"
+        },
+        {
+            "id": "anthropic/claude-3-haiku",
+            "name": "Claude 3 Haiku",
+            "description": "Fast & efficient",
+            "icon": "fa-leaf",
+            "badge": "New"
+        },
+        {
+            "id": "meta-llama/llama-3.1-70b-instruct",
+            "name": "Llama 3.1 70B",
+            "description": "Open-source power",
+            "icon": "fa-dragon",
+            "badge": "Open"
+        },
+        {
+            "id": "deepseek/deepseek-r1-0528:free",
+            "name": "DeepSeek R1",
+            "description": "Free reasoning model",
+            "icon": "fa-brain",
+            "badge": "Free"
+        }
+    ]
+
 }
